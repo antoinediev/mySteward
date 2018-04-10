@@ -21,6 +21,7 @@
 #define MAX_BUFFER 1024
 #define MAX_MSG 512
 #define MAX_VERBE 10
+#define POURCENTAGE 100
 
 #define IP_SVC "0.0.0.0"
 #define PORT_SVC 5000
@@ -33,7 +34,6 @@ typedef char verbe_t[MAX_VERBE];
 
 typedef struct {
     unsigned int code;
-    verbe_t verbe;
     msg_t msg;
 } protofmt_t;
 
@@ -47,6 +47,7 @@ typedef struct {
 
 int tailleREQ2REP(void);
 
+void traiter110(int sock,protofmt_t req, protofmt_t *rep);
 void traiter100(int sock,protofmt_t req, protofmt_t *rep);
 void traiter0(int sock,protofmt_t req, protofmt_t *rep);
 

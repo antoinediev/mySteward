@@ -5,7 +5,8 @@
  */
 const req2rep REQ2REP [] = {
     0,traiter0,
-    100,traiter100
+    100,traiter100,
+    110,traiter110
 };
 
 /** Traitement associé aux requêtes **/
@@ -18,34 +19,40 @@ void traiter0(int sock,protofmt_t req, protofmt_t *rep){
 void traiter100(int sock,protofmt_t req, protofmt_t *rep){
     if(strcmp(req.msg,"moi") == 0){
         rep->code = 200;
-        strcpy(rep->verbe,"OK"); 
     } else {
         rep->code = 300;
-        strcpy(rep->verbe,"NOK");
     }
+}
+
+void traiter110(int sock,protofmt_t req, protofmt_t *rep){
+    int pourcentage=0;
+    buffer_t barrecode;
+    sscanf(req.msg,"%d&%s",&pourcentage,barrecode);
 }
 
 /** Serialisation et deserialisation des requêtes et reponses **/
 void str2rep(buffer_t b, protofmt_t* rep){
     //prend en compte les espaces dans la chaine de caractere de reponse
     memset(rep,0,sizeof(protofmt_t));
-    sscanf(b,"%u#%s#%s",&rep->code,rep->verbe,rep->msg);
+    sscanf(b,"%u#%s",&rep->code,rep->msg);
 }
 
 
 void req2str(protofmt_t req,buffer_t b){
     memset(b,0,MAX_BUFFER);
-    sprintf(b,"%u#%s#%s",req.code,req.verbe,req.msg);
+    sprintf(b,"%u#%s",req.code,req.msg);
 }
 
 
 void str2req(buffer_t b, protofmt_t* req){
-    sscanf(b,"%u#%s#%s",&req->code,req->verbe,req->msg);
+    buffer_t tmp;
+
+    sscanf(b,"%u#%s",&req->code,req->msg);
 }
 
 void rep2str(protofmt_t rep,buffer_t b){
     memset(b,0,MAX_BUFFER);
-    sprintf(b,"%u#%s#%s",rep.code,rep.verbe,rep.msg);
+    sprintf(b,"%u#%s",rep.code,rep.msg);
 }
 
 /**
@@ -56,7 +63,7 @@ void ecrireRequete(int sockDialogue, protofmt_t req){
 
     req2str(req,b);
     CHECK(write(sockDialogue,b,strlen(b)+1),"Problème envoie requete");
-    printf("\tcode=#%u#, verbe : #%s#, message=#%s\n",req.code,req.verbe,req.msg);
+    printf("\tcode=\"%u\", message=\"%s\"\n",req.code,req.msg);
 
 }
 
@@ -65,7 +72,7 @@ void ecrireReponse(int sockDialogue, protofmt_t rep){
 
     rep2str(rep,b);
     CHECK(write(sockDialogue,b,strlen(b)+1),"Problème envoie requete");
-    printf("\tcode=#%u#, verbe : #%s# , message=#%s\n",rep.code,rep.verbe,rep.msg);
+    printf("\tcode=\"%u\", message=\"%s\"\n",rep.code,rep.msg);
 }
 
 /** Lecture des requêtes et réponses **/ 
@@ -74,8 +81,9 @@ void lireRequete(int sockDialogue, protofmt_t *req){
 
     memset(b,0,MAX_BUFFER);
     CHECK(read(sockDialogue,b,MAX_BUFFER),"Problème lecture requete");
+    printf("%s\n",b);
     str2req(b,req);
-    printf("\tcode:#%u#, verbe ; #%s#,msg=#%s#\n", req->code,req->verbe,req->msg);
+    printf("\tcode : \"%u\",  msg :\"%s\"\n", req->code,req->msg);
 }
 
 void lireReponse(int sockDialogue, protofmt_t *req){
@@ -84,7 +92,7 @@ void lireReponse(int sockDialogue, protofmt_t *req){
     memset(b,0,MAX_BUFFER);
     CHECK(read(sockDialogue,b,MAX_BUFFER),"Problème lecture requete");
     str2rep(b,req);
-    printf("\tcode:#%u#, verbe : #%s#, msg=#%s#\n", req->code,req->verbe,req->msg);
+    printf("\tcode:#%u#, msg=#%s#\n", req->code,req->msg);
 }
 
 /** Connexion **/
@@ -157,7 +165,6 @@ int createSocketEcoute(char *ipSvc, int portSvc){
 
 void connexion(int sockDialogue, protofmt_t *req){
     req->code = 100;
-    strcpy(req->verbe,"CONNECT");
     memset(req->msg,0,MAX_MSG);
     printf("USERNAME : "); scanf("%s",req->msg);
     ecrireRequete(sockDialogue,*req);
@@ -165,28 +172,13 @@ void connexion(int sockDialogue, protofmt_t *req){
 
 /** user input **/
 void creerRequete(protofmt_t *req){
-    msg_t lcde;
-    verbe_t cde;
-    printf(" ftp> \n");
-    fpurge(stdin);
-     gets(lcde); 
-    sscanf(lcde,"%s %s",cde,req->msg);
-
-    if(strcmp(cde,"ls")==0){
-        req->code = 110;
-        strcpy(req->verbe,"LIST");
-        return;
-    }
-    if(strcmp(cde,"cd")==0){
-        req->code = 120;
-        strcpy(req->verbe,"CHANGE");
-        return;
-    }
-    if(strcmp(cde,"exit")==0){
-        req->code = 0;
-        strcpy(req->verbe,"QUIT");
-        return;
-    }
+    msg_t barreCode;
+    int pourcentage = POURCENTAGE;
+    scanf("%s",barreCode); 
+    sprintf(req->msg,"%d&%s",pourcentage,barreCode);
+    printf("%s\n",req->msg);
+    req->code = 110;
+    return;
 }
 
 /** Dialogue **/
