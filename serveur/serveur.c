@@ -1,10 +1,5 @@
 #include "../headers/mySteward.h"
 
-/** VARIABLES GLOBALES **/
-extern const req2rep REQ2REP [];
-
-/** PROTOTYPES **/
-
 /** main **/
 int main(int c, char**v){
     int sockEcoute, sockDialogue;

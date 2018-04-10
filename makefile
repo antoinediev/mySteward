@@ -1,12 +1,18 @@
 all : client serveur
 
-client : libs/mySteward.o client/client.c
-	gcc libs/mySteward.o client/client.c -o client/client
+client : libs/mySteward_client.o client/client.c
+	gcc  libs/mySteward_client.o client/client.c -o client/client
 
-serveur : libs/mySteward.o serveur/serveur.c
-	gcc libs/mySteward.o serveur/serveur.c -o serveur/serveur
+serveur : libs/mySteward_serveur.o serveur/serveur.c
+	gcc  libs/mySteward_serveur.o serveur/serveur.c -o serveur/serveur
 
-mySteward.o : libs/mySteward.c headers/mySteward.h
-	gcc libs/mySteward.c -c libs/mySteward.o
+mySteward_serveur.o : libs/mySteward_serveur.c headers/mySteward.h 
+	gcc libs/mySteward_serveur.c -c libs/mySteward_serveur.o
 
-clean : rm client/client serveur/serveur lib/mySteward.o 
+mySteward_client.o : libs/mySteward_client.c headers/mySteward.h 
+	gcc libs/mySteward_client.c -c libs/mySteward_client.o
+
+
+
+clean : 
+	rm -rf client/client serveur/serveur libs/*.o 

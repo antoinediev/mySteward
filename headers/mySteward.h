@@ -45,11 +45,10 @@ typedef struct {
     traiterReq stmt;
 } req2rep;
 
-int tailleREQ2REP(void);
-
 void traiter110(int sock,protofmt_t req, protofmt_t *rep);
-void traiter100(int sock,protofmt_t req, protofmt_t *rep);
-void traiter0(int sock,protofmt_t req, protofmt_t *rep);
+
+
+int tailleREQ2REP(void);
 
 void str2rep(buffer_t b, protofmt_t* rep);
 void req2str(protofmt_t req,buffer_t b);
