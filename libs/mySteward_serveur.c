@@ -1,4 +1,6 @@
 #include "../headers/mySteward.h"
+#include <mysql/my_global.h>
+#include <mysql/mysql.h>
 
 const req2rep REQ2REP [] = {
     110,traiter110
@@ -7,8 +9,39 @@ const req2rep REQ2REP [] = {
 void traiter110(int sock,protofmt_t req, protofmt_t *rep){
     int pourcentage=0;
     buffer_t barrecode;
+
+    MYSQL *conn;
+    MYSQL_RES *res;
+    MYSQL_ROW row;
+
+    char *server = "localhost";
+    char *user = "root";
+    char *password = "password"; /* set me first */
+    char *database = "mySteward";
+
+    conn = mysql_init(NULL);
+
+    if (!mysql_real_connect(conn, server, user, password, database, 0, NULL, 0)) {
+      fprintf(stderr, "%s\n", mysql_error(conn));
+      exit(1);
+    }
+    if (mysql_query(conn, "show tables")) {
+        fprintf(stderr, "%s\n", mysql_error(conn));
+        exit(1);
+    }
+
+    res = mysql_use_result(conn);
+    printf("MySQL Tables in mysql database:\n");
+    while ((row = mysql_fetch_row(res)) != NULL)
+      printf("%s \n", row[0]);
+    
+    mysql_free_result(res);
+    mysql_close(conn);
+
+
     sscanf(req.msg,"%d&%s",&pourcentage,barrecode);
     printf(" Code barre : %s Pourcentage : %d\n",barrecode,pourcentage);
+    printf("The MySQL client version is : %s\n", mysql_get_client_info());
 }
 
 void str2req(buffer_t b, protofmt_t* req){

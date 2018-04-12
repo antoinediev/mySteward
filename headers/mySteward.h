@@ -15,6 +15,7 @@
 #include <time.h>
 #include <netdb.h>
 
+
 #define CHECK(sts,msg) if ((sts) == -1) {perror(msg); exit(-1); }
 #define CHECKp(sts,msg) if ((sts) == NULL) {perror(msg); exit(-1); }
 
