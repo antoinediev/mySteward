@@ -9,39 +9,72 @@ const req2rep REQ2REP [] = {
 void traiter110(int sock,protofmt_t req, protofmt_t *rep){
     int pourcentage=0;
     buffer_t barrecode;
-
+    buffer_t query;
+    int productInDB=0;
+    int num_fields;
     MYSQL *conn;
     MYSQL_RES *res;
     MYSQL_ROW row;
+    MYSQL_ROW rowProduct;
 
     char *server = "localhost";
     char *user = "root";
     char *password = "password"; /* set me first */
     char *database = "mySteward";
 
+    sscanf(req.msg,"%d&%s",&pourcentage,barrecode);
+    memset(query,0,MAX_BUFFER);
+    sprintf(query,"SELECT * from PRODUCTS WHERE barrecode = %s",barrecode);
     conn = mysql_init(NULL);
 
     if (!mysql_real_connect(conn, server, user, password, database, 0, NULL, 0)) {
       fprintf(stderr, "%s\n", mysql_error(conn));
       exit(1);
     }
-    if (mysql_query(conn, "show tables")) {
+    if (mysql_query(conn, query)) {
         fprintf(stderr, "%s\n", mysql_error(conn));
         exit(1);
     }
+    //res = mysql_use_result(conn);
+    res = mysql_store_result(conn);
 
-    res = mysql_use_result(conn);
-    printf("MySQL Tables in mysql database:\n");
-    while ((row = mysql_fetch_row(res)) != NULL)
-      printf("%s \n", row[0]);
+    num_fields = mysql_num_fields(res);
+
+    while((row = mysql_fetch_row(res)) != NULL){
+        productInDB = 1;
+        rowProduct = row;
+    }
+    //mysql_free_result(res);
+    printf("valeur de productInDB : %d\n",productInDB);
+    //Le produit est deja present dans la base
+    if(productInDB){
+        if(pourcentage==100){ // pourcentage égale à 100
+            memset(query,0,MAX_BUFFER);
+            sprintf(query,"update STOCKS set quantity = quantity + 1 where idProduct = %s ",rowProduct[0]);
+
+            if (mysql_query(conn, query)) {
+                fprintf(stderr, "[Error]%s\n", mysql_error(conn));
+                exit(1);
+            }
+            res = mysql_store_result(conn);
+            while((row = mysql_fetch_row(res)) != NULL){
+                printf("%s\n",row[0]);
+            }
+
+        } else if(pourcentage <100 && pourcentage>0){ //Pourcentage different de 100
+            printf("pourcentage different de 100\n");
+        } else { //Pourcentage = 0
+            printf("pourcentage = 0 \n");
+        }
+    } else { // le produit n'est pas présent il faut l'ajouter 
+        printf("Produit non present dans la base\n");
+    }
     
     mysql_free_result(res);
     mysql_close(conn);
 
 
-    sscanf(req.msg,"%d&%s",&pourcentage,barrecode);
     printf(" Code barre : %s Pourcentage : %d\n",barrecode,pourcentage);
-    printf("The MySQL client version is : %s\n", mysql_get_client_info());
 }
 
 void str2req(buffer_t b, protofmt_t* req){
@@ -96,7 +129,7 @@ int createSocketEcoute(char *ipSvc, int portSvc){
     server.sin_addr.s_addr = inet_addr(ipSvc);
     bzero(server.sin_zero,8);
     //Association de l'adressage avec la socket
-    CHECK(bind(sock, (struct sockaddr *)&server, sizeof server),"Bind\t\t[FAILED]");
+    CHECK(bind(sock, (struct sockaddr *)&server, sizeof server),"Bind\t[FAILED]");
 
     //Recuperation des infos de la socket 
     len = sizeof(server);

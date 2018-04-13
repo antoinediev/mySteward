@@ -10,7 +10,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-
+#include <signal.h>
 #include <errno.h>
 #include <time.h>
 #include <netdb.h>

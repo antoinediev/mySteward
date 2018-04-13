@@ -1,12 +1,14 @@
 #include "../headers/mySteward.h"
 
+void sigint_handler();
+int sockEcoute, sockDialogue;
 /** main **/
 int main(int c, char**v){
-    int sockEcoute, sockDialogue;
+    
     pid_t pidClient;
 
     printf("Hello i'm mySteward your personel connected steward\n\n");
-    
+    signal(SIGINT,sigint_handler);
     //creation socket ecoute, association adressage et mise en ecoute
     sockEcoute = createSocketEcoute(IP_SVC,PORT_SVC);
     while(1){
@@ -30,4 +32,11 @@ int main(int c, char**v){
     //fermeture socket d'écoute
     close(sockEcoute);
     return 0;
+}
+
+void sigint_handler(){
+    printf("arret propre \n");
+    close(sockDialogue);
+    close(sockEcoute);
+  
 }
