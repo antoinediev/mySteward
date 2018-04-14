@@ -14,7 +14,8 @@
 #include <errno.h>
 #include <time.h>
 #include <netdb.h>
-
+#include <math.h>
+#include <curl/curl.h>
 
 #define CHECK(sts,msg) if ((sts) == -1) {perror(msg); exit(-1); }
 #define CHECKp(sts,msg) if ((sts) == NULL) {perror(msg); exit(-1); }
@@ -22,7 +23,7 @@
 #define MAX_BUFFER 1024
 #define MAX_MSG 512
 #define MAX_VERBE 10
-#define POURCENTAGE 100
+#define POURCENTAGE 0
 
 #define IP_SVC "0.0.0.0"
 #define PORT_SVC 5000
@@ -38,6 +39,14 @@ typedef struct {
     msg_t msg;
 } protofmt_t;
 
+typedef struct {
+    unsigned int idProduct;
+    buffer_t barrecode;
+    buffer_t name;
+    buffer_t imgUrl;
+    buffer_t brand;
+} product_t;
+
 typedef void (*traiterReq)(int sock,protofmt_t req, protofmt_t* rep);
 typedef void (*traiterRep)(protofmt_t rep);
 
@@ -51,6 +60,7 @@ void traiter110(int sock,protofmt_t req, protofmt_t *rep);
 
 int tailleREQ2REP(void);
 
+void requestApiFood(product_t * product);
 void str2rep(buffer_t b, protofmt_t* rep);
 void req2str(protofmt_t req,buffer_t b);
 void str2req(buffer_t b, protofmt_t* req);

@@ -44,11 +44,10 @@ void traiter110(int sock,protofmt_t req, protofmt_t *rep){
         productInDB = 1;
         rowProduct = row;
     }
-    //mysql_free_result(res);
-    printf("valeur de productInDB : %d\n",productInDB);
     //Le produit est deja present dans la base
     if(productInDB){
         if(pourcentage==100){ // pourcentage égale à 100
+            printf("pourcentage = 100\n");
             memset(query,0,MAX_BUFFER);
             sprintf(query,"update STOCKS set quantity = quantity + 1 where idProduct = %s ",rowProduct[0]);
 
@@ -56,18 +55,71 @@ void traiter110(int sock,protofmt_t req, protofmt_t *rep){
                 fprintf(stderr, "[Error]%s\n", mysql_error(conn));
                 exit(1);
             }
-            res = mysql_store_result(conn);
-            while((row = mysql_fetch_row(res)) != NULL){
-                printf("%s\n",row[0]);
-            }
-
+           
         } else if(pourcentage <100 && pourcentage>0){ //Pourcentage different de 100
-            printf("pourcentage different de 100\n");
+            printf("pourcentage != 100\n");
+            double actualQuantity;
+            memset(query,0,MAX_BUFFER);
+            sprintf(query,"select quantity from STOCKS where idProduct =  %s ",rowProduct[0]);
+            if (mysql_query(conn, query)) {
+                fprintf(stderr, "[Error]%s\n", mysql_error(conn));
+                exit(1);
+            }
+            res = mysql_store_result(conn);
+            num_fields = mysql_num_fields(res);
+            while((row = mysql_fetch_row(res)) != NULL){
+                sscanf(row[0],"%lf",&actualQuantity);
+            }
+            if(floor(actualQuantity) == actualQuantity){//si la quantité en base est un entier
+                printf("quantite en base entier\n");
+                memset(query,0,MAX_BUFFER);
+                sprintf(query,"update STOCKS set quantity = quantity - 1 + %lf where idProduct = %s ",(double)pourcentage/100, rowProduct[0]);
+                if (mysql_query(conn, query)) {
+                    fprintf(stderr, "[Error]%s\n", mysql_error(conn));
+                    exit(1);
+                }
+            } else {//quantité en base est un decimal 
+                memset(query,0,MAX_BUFFER);
+                sprintf(query,"update STOCKS set quantity = %lf where idProduct = %s ",(floor(actualQuantity)+(double)pourcentage/100), rowProduct[0]);
+                if (mysql_query(conn, query)) {
+                    fprintf(stderr, "[Error]%s\n", mysql_error(conn));
+                    exit(1);
+                }
+            }
         } else { //Pourcentage = 0
-            printf("pourcentage = 0 \n");
+            double actualQuantity;
+            memset(query,0,MAX_BUFFER);
+            sprintf(query,"select quantity from STOCKS where idProduct =  %s ",rowProduct[0]);
+            if (mysql_query(conn, query)) {
+                fprintf(stderr, "[Error]%s\n", mysql_error(conn));
+                exit(1);
+            }
+            res = mysql_store_result(conn);
+            num_fields = mysql_num_fields(res);
+            while((row = mysql_fetch_row(res)) != NULL){
+                sscanf(row[0],"%lf",&actualQuantity);
+            }
+            if(floor(actualQuantity) == actualQuantity){//si la quantité en base est un entier
+                printf("quantite en base entier\n");
+                memset(query,0,MAX_BUFFER);
+                sprintf(query,"update STOCKS set quantity = %lf where idProduct = %s ", actualQuantity-1.0, rowProduct[0]);
+                if (mysql_query(conn, query)) {
+                    fprintf(stderr, "[Error]%s\n", mysql_error(conn));
+                    exit(1);
+                }
+            } else {//quantité en base est un decimal 
+                memset(query,0,MAX_BUFFER);
+                sprintf(query,"update STOCKS set quantity = %lf where idProduct = %s ",floor(actualQuantity), rowProduct[0]);
+                if (mysql_query(conn, query)) {
+                    fprintf(stderr, "[Error]%s\n", mysql_error(conn));
+                    exit(1);
+                }
+            }
         }
     } else { // le produit n'est pas présent il faut l'ajouter 
         printf("Produit non present dans la base\n");
+        product_t product;
+        requestApiFood(&product);
     }
     
     mysql_free_result(res);
@@ -75,6 +127,29 @@ void traiter110(int sock,protofmt_t req, protofmt_t *rep){
 
 
     printf(" Code barre : %s Pourcentage : %d\n",barrecode,pourcentage);
+    memset(barrecode,0,MAX_BUFFER);
+}
+
+void requestApiFood(product_t* product){
+    CURL *curl;
+    CURLcode res;
+
+      /* In windows, this will init the winsock stuff */ 
+    curl_global_init(CURL_GLOBAL_ALL);
+    
+    /* get a curl handle */ 
+    curl = curl_easy_init();
+    if(curl) {
+        curl_easy_setopt(curl, CURLOPT_URL, "https://google.com/");res = curl_easy_perform(curl);
+        /* Check for errors */ 
+        if(res != CURLE_OK)
+        fprintf(stderr, "curl_easy_perform() failed: %s\n",
+                curl_easy_strerror(res));
+    
+        /* always cleanup */ 
+        curl_easy_cleanup(curl);
+    }
+    curl_global_cleanup();
 }
 
 void str2req(buffer_t b, protofmt_t* req){

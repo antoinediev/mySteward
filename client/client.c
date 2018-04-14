@@ -1,10 +1,13 @@
 #include "../headers/mySteward.h"
 
+
+
 int main(int c, char**v){
+    
     int sockAppel;
 
     printf("Hello i'm mySteward your personel connected steward\n");
-    
+
     //verification des parametres
     if(c<3){
         printf ("usage : %s <adrIP> <port> \n",v[0]);
