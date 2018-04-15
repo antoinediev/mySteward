@@ -16,6 +16,7 @@
 #include <netdb.h>
 #include <math.h>
 #include <curl/curl.h>
+#include <json-c/json.h>
 
 #define CHECK(sts,msg) if ((sts) == -1) {perror(msg); exit(-1); }
 #define CHECKp(sts,msg) if ((sts) == NULL) {perror(msg); exit(-1); }
@@ -23,7 +24,7 @@
 #define MAX_BUFFER 1024
 #define MAX_MSG 512
 #define MAX_VERBE 10
-#define POURCENTAGE 0
+#define POURCENTAGE 100
 
 #define IP_SVC "0.0.0.0"
 #define PORT_SVC 5000
@@ -55,11 +56,17 @@ typedef struct {
     traiterReq stmt;
 } req2rep;
 
+struct string {
+  char *ptr;
+  size_t len;
+};
+
 void traiter110(int sock,protofmt_t req, protofmt_t *rep);
 
 
 int tailleREQ2REP(void);
-
+void init_string(struct string *s);
+size_t writefunc(void *ptr, size_t size, size_t nmemb, struct string *s);
 void requestApiFood(product_t * product);
 void str2rep(buffer_t b, protofmt_t* rep);
 void req2str(protofmt_t req,buffer_t b);
