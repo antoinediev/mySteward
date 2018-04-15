@@ -10,10 +10,13 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-
+#include <signal.h>
 #include <errno.h>
 #include <time.h>
 #include <netdb.h>
+#include <math.h>
+#include <curl/curl.h>
+#include <json-c/json.h>
 
 #define CHECK(sts,msg) if ((sts) == -1) {perror(msg); exit(-1); }
 #define CHECKp(sts,msg) if ((sts) == NULL) {perror(msg); exit(-1); }
@@ -37,6 +40,14 @@ typedef struct {
     msg_t msg;
 } protofmt_t;
 
+typedef struct {
+    unsigned int idProduct;
+    buffer_t barrecode;
+    buffer_t name;
+    buffer_t imgUrl;
+    buffer_t brand;
+} product_t;
+
 typedef void (*traiterReq)(int sock,protofmt_t req, protofmt_t* rep);
 typedef void (*traiterRep)(protofmt_t rep);
 
@@ -45,11 +56,18 @@ typedef struct {
     traiterReq stmt;
 } req2rep;
 
+struct string {
+  char *ptr;
+  size_t len;
+};
+
 void traiter110(int sock,protofmt_t req, protofmt_t *rep);
 
 
 int tailleREQ2REP(void);
-
+void init_string(struct string *s);
+size_t writefunc(void *ptr, size_t size, size_t nmemb, struct string *s);
+void requestApiFood(product_t * product);
 void str2rep(buffer_t b, protofmt_t* rep);
 void req2str(protofmt_t req,buffer_t b);
 void str2req(buffer_t b, protofmt_t* req);

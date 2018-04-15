@@ -1,4 +1,6 @@
 #include "../headers/mySteward.h"
+#include <mysql/my_global.h>
+#include <mysql/mysql.h>
 
 const req2rep REQ2REP [] = {
     110,traiter110
@@ -7,9 +9,210 @@ const req2rep REQ2REP [] = {
 void traiter110(int sock,protofmt_t req, protofmt_t *rep){
     int pourcentage=0;
     buffer_t barrecode;
+    buffer_t query;
+    int productInDB=0;
+    int num_fields;
+    MYSQL *conn;
+    MYSQL_RES *res;
+    MYSQL_ROW row;
+    MYSQL_ROW rowProduct;
+
+    char *server = "localhost";
+    char *user = "root";
+    char *password = "password"; 
+    char *database = "mySteward";
+
+    rep->code = 500;
+    strcpy(rep->msg,"errorTraitement");
+
     sscanf(req.msg,"%d&%s",&pourcentage,barrecode);
-    printf(" Code barre : %s Pourcentage : %d\n",barrecode,pourcentage);
+    memset(query,0,MAX_BUFFER);
+    sprintf(query,"SELECT * FROM PRODUCTS WHERE barrecode = %s",barrecode);
+    conn = mysql_init(NULL);
+
+    if (!mysql_real_connect(conn, server, user, password, database, 0, NULL, 0)) {
+      fprintf(stderr, "%s\n", mysql_error(conn));
+      exit(1);
+    }
+    if (mysql_query(conn, query)) {
+        fprintf(stderr, "%s\n", mysql_error(conn));
+        exit(1);
+    }
+    //res = mysql_use_result(conn);
+    res = mysql_store_result(conn);
+
+    num_fields = mysql_num_fields(res);
+
+    while((row = mysql_fetch_row(res)) != NULL){
+        productInDB = 1;
+        rowProduct = row;
+    }
+    //Le produit est deja present dans la base
+    if(productInDB){
+        if(pourcentage==100){ // pourcentage égale à 100
+            printf("pourcentage = 100\n");
+            memset(query,0,MAX_BUFFER);
+            sprintf(query,"update STOCKS set quantity = quantity + 1 where idProduct = %s ",rowProduct[0]);
+
+            if (mysql_query(conn, query)) {
+                fprintf(stderr, "[Error]%s\n", mysql_error(conn));
+                exit(1);
+            }
+           
+        } else if(pourcentage <100 && pourcentage>0){ //Pourcentage different de 100
+            printf("pourcentage != 100\n");
+            double actualQuantity;
+            memset(query,0,MAX_BUFFER);
+            sprintf(query,"select quantity from STOCKS where idProduct =  %s ",rowProduct[0]);
+            if (mysql_query(conn, query)) {
+                fprintf(stderr, "[Error]%s\n", mysql_error(conn));
+                exit(1);
+            }
+            res = mysql_store_result(conn);
+            num_fields = mysql_num_fields(res);
+            while((row = mysql_fetch_row(res)) != NULL){
+                sscanf(row[0],"%lf",&actualQuantity);
+            }
+            if(floor(actualQuantity) == actualQuantity){//si la quantité en base est un entier
+                printf("quantite en base entier\n");
+                memset(query,0,MAX_BUFFER);
+                sprintf(query,"update STOCKS set quantity = quantity - 1 + %lf where idProduct = %s ",(double)pourcentage/100, rowProduct[0]);
+                if (mysql_query(conn, query)) {
+                    fprintf(stderr, "[Error]%s\n", mysql_error(conn));
+                    exit(1);
+                }
+            } else {//quantité en base est un decimal 
+                memset(query,0,MAX_BUFFER);
+                sprintf(query,"update STOCKS set quantity = %lf where idProduct = %s ",(floor(actualQuantity)+(double)pourcentage/100), rowProduct[0]);
+                if (mysql_query(conn, query)) {
+                    fprintf(stderr, "[Error]%s\n", mysql_error(conn));
+                    exit(1);
+                }
+            }
+        } else { //Pourcentage = 0
+            double actualQuantity;
+            memset(query,0,MAX_BUFFER);
+            sprintf(query,"select quantity from STOCKS where idProduct =  %s ",rowProduct[0]);
+            if (mysql_query(conn, query)) {
+                fprintf(stderr, "[Error]%s\n", mysql_error(conn));
+                exit(1);
+            }
+            res = mysql_store_result(conn);
+            num_fields = mysql_num_fields(res);
+            while((row = mysql_fetch_row(res)) != NULL){
+                sscanf(row[0],"%lf",&actualQuantity);
+            }
+            if(floor(actualQuantity) == actualQuantity){//si la quantité en base est un entier
+                printf("quantite en base entier\n");
+                memset(query,0,MAX_BUFFER);
+                sprintf(query,"update STOCKS set quantity = %lf where idProduct = %s ", actualQuantity-1.0, rowProduct[0]);
+                if (mysql_query(conn, query)) {
+                    fprintf(stderr, "[Error]%s\n", mysql_error(conn));
+                    exit(1);
+                }
+            } else {//quantité en base est un decimal 
+                memset(query,0,MAX_BUFFER);
+                sprintf(query,"update STOCKS set quantity = %lf where idProduct = %s ",floor(actualQuantity), rowProduct[0]);
+                if (mysql_query(conn, query)) {
+                    fprintf(stderr, "[Error]%s\n", mysql_error(conn));
+                    exit(1);
+                }
+            }
+        }
+    } else { // le produit n'est pas présent il faut l'ajouter 
+        printf("Produit non present dans la base\n");
+        product_t product;
+        strcpy(product.barrecode,barrecode);
+        requestApiFood(&product);
+        memset(query,0,MAX_BUFFER);
+        sprintf(query,"insert into PRODUCTS (`barrecode`,`name`,`imgUrl`,`brand`) values ('%s','%s','%s','%s');",product.barrecode,product.name,product.imgUrl,product.brand);
+        if (mysql_query(conn, query)) {
+            fprintf(stderr, "[Error]%s\n", mysql_error(conn));
+            exit(1);
+        }
+        memset(query,0,MAX_BUFFER);
+        sprintf(query,"insert into STOCKS (`quantity`,`idProduct`) values ('%lf',(select idPRODUCT from PRODUCTS where barrecode = %s));",(double)pourcentage/100,barrecode);
+        if (mysql_query(conn, query)) {
+            fprintf(stderr, "[Error]%s\n", mysql_error(conn));
+            exit(1);
+        }       
+    }
+    
+    mysql_free_result(res);
+    mysql_close(conn);
+    rep->code = 200;
+    strcpy(rep->msg,"ok");
 }
+
+void requestApiFood(product_t* product){
+    CURL *curl;
+    CURLcode res;
+    struct string s;
+    struct json_object *jobj;
+    struct json_object *jobj2;
+    struct json_object *jobjBrand;
+    struct json_object *jobjName;
+    struct json_object *jobjImgUrl;
+    buffer_t url;
+      /* In windows, this will init the winsock stuff */ 
+    curl_global_init(CURL_GLOBAL_ALL);
+    sprintf(url,"http://fr.openfoodfacts.org/api/v0/produit/%s.json",product->barrecode);
+    /* get a curl handle */ 
+    curl = curl_easy_init();
+    if(curl) {
+        init_string(&s);
+        curl_easy_setopt(curl, CURLOPT_URL, url);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s);
+        res = curl_easy_perform(curl);
+        /* Check for errors */ 
+        if(res != CURLE_OK)
+        fprintf(stderr, "curl_easy_perform() failed: %s\n",
+                curl_easy_strerror(res));
+        //json part
+        jobj = json_tokener_parse(s.ptr);
+        json_object_object_get_ex(jobj,"product",&jobj2);
+        json_object_object_get_ex(jobj2,"brands",&jobjBrand);
+        json_object_object_get_ex(jobj2,"generic_name_fr",&jobjName);
+        json_object_object_get_ex(jobj2,"image_url",&jobjImgUrl);
+
+        strcpy(product->brand , json_object_get_string(jobjBrand));
+        strcpy(product->name , json_object_get_string(jobjName));
+        strcpy(product->imgUrl , json_object_get_string(jobjImgUrl));
+        printf("product : {\n\tname : \"%s\",\n\tbrand : \"%s\",\n\t imgUrl : \"%s\"\n}\n ",product->name,product->brand,product->imgUrl);
+
+        free(s.ptr);
+        /* always cleanup */ 
+        curl_easy_cleanup(curl);
+    }
+    curl_global_cleanup();
+}
+
+void init_string(struct string *s) {
+  s->len = 0;
+  s->ptr = malloc(s->len+1);
+  if (s->ptr == NULL) {
+    fprintf(stderr, "malloc() failed\n");
+    exit(EXIT_FAILURE);
+  }
+  s->ptr[0] = '\0';
+}
+
+size_t writefunc(void *ptr, size_t size, size_t nmemb, struct string *s)
+{
+  size_t new_len = s->len + size*nmemb;
+  s->ptr = realloc(s->ptr, new_len+1);
+  if (s->ptr == NULL) {
+    fprintf(stderr, "realloc() failed\n");
+    exit(EXIT_FAILURE);
+  }
+  memcpy(s->ptr+s->len, ptr, size*nmemb);
+  s->ptr[new_len] = '\0';
+  s->len = new_len;
+
+  return size*nmemb;
+}
+
 
 void str2req(buffer_t b, protofmt_t* req){
     sscanf(b,"%u#%s",&req->code,req->msg);
@@ -63,7 +266,7 @@ int createSocketEcoute(char *ipSvc, int portSvc){
     server.sin_addr.s_addr = inet_addr(ipSvc);
     bzero(server.sin_zero,8);
     //Association de l'adressage avec la socket
-    CHECK(bind(sock, (struct sockaddr *)&server, sizeof server),"Bind\t\t[FAILED]");
+    CHECK(bind(sock, (struct sockaddr *)&server, sizeof server),"Bind\t[FAILED]");
 
     //Recuperation des infos de la socket 
     len = sizeof(server);

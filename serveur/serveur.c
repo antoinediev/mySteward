@@ -1,12 +1,12 @@
 #include "../headers/mySteward.h"
 
+
 /** main **/
 int main(int c, char**v){
     int sockEcoute, sockDialogue;
     pid_t pidClient;
 
     printf("Hello i'm mySteward your personel connected steward\n\n");
-    
     //creation socket ecoute, association adressage et mise en ecoute
     sockEcoute = createSocketEcoute(IP_SVC,PORT_SVC);
     while(1){
