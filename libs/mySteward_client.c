@@ -79,6 +79,41 @@ void creerRequete(protofmt_t *req){
     return;
 }
 
+void traiterReponse( protofmt_t rep ){
+    int pourcentage=0;
+    buffer_t code;
+    switch(rep.code){
+        case 200: //ajout ok
+            char msglcd[500] ="PRODUIT AJOUTE: "; 
+            strcat(msglcd, rep.msg); //on affiche le nom retourné par le serveur
+            char colorlcd[]="green";
+         //   print_lcd(msglcd,colorlcd);
+            delay(3000);
+            char colorlcd[]="black";
+         //   print_lcd("",colorlcd);
+
+            break;
+        case 201: //mise à la poubelle
+            char colorlcd[]="green";
+            print_lcd(rep.msg,colorlcd);
+            delay(3000);
+            char colorlcd[]="black";
+         //   print_lcd("",colorlcd);
+            break;
+        case 202: 
+            char msglcd[] ="ALERTE ALLERGENE: "; 
+            strcat(msglcd, rep.msg);
+            char colorlcd[]="green";
+         //   print_lcd(msglcd,colorlcd);
+            buzz();
+            delay(3000);
+            char colorlcd[]="black";
+         //   print_lcd("",colorlcd);
+            break;
+
+    }
+
+}
 /** Dialogue **/
 
 void dialogueAvecServ(int sockDialogue){
@@ -91,8 +126,9 @@ void dialogueAvecServ(int sockDialogue){
         creerRequete(&req);
         ecrireRequete(sockDialogue,req);
         // Code zero pour arreter le dialogue
-        if(req.code==0) break;
+        if(req.code==0) break; ///////////////////////////////////// jms le cas
         lireReponse(sockDialogue,&rep);
+        traiterReponse(rep);
     }  
 }
 
