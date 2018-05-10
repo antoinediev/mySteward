@@ -126,6 +126,7 @@ void traiter110(int sock,protofmt_t req, protofmt_t *rep){
         requestApiFood(&product);
         memset(query,0,MAX_BUFFER);
         sprintf(query,"insert into PRODUCTS (`barrecode`,`name`,`imgUrl`,`brand`) values ('%s','%s','%s','%s');",product.barrecode,product.name,product.imgUrl,product.brand);
+        addBackslash(query);
         if (mysql_query(conn, query)) {
             fprintf(stderr, "[Error]%s\n", mysql_error(conn));
             exit(1);
@@ -294,5 +295,25 @@ void dialogueAvecClient(int sockDialogue){
         }
         //traiterRequete(req,&rep);
         ecrireReponse(sockDialogue,rep);  
+    }
+}
+
+void addBackslash(buffer_t b){
+    int i,j;
+    buffer_t buff;
+    for(i=0;i<strlen(b);i++){
+        if( b[i]==34 || b[i] == 39 ){
+            for(j=0; j<i;j++){
+                buff[j]=b[j];
+            }
+            strcat(buff,"\\");
+            for(j=i+1;j<strlen(b)+1;j++){
+                buff[j]=b[j-1];
+            }
+            memset(b,0,1024);
+            strcpy(b,buff);
+            memset(buff,0,1024);
+            i++;    
+        } 
     }
 }
