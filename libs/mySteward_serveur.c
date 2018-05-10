@@ -19,7 +19,7 @@ void traiter110(int sock,protofmt_t req, protofmt_t *rep){
 
     char *server = "localhost";
     char *user = "root";
-    char *password = "password"; 
+    char *password = "raspberry"; 
     char *database = "mySteward";
 
     rep->code = 500;
@@ -173,7 +173,7 @@ void requestApiFood(product_t* product){
         jobj = json_tokener_parse(s.ptr);
         json_object_object_get_ex(jobj,"product",&jobj2);
         json_object_object_get_ex(jobj2,"brands",&jobjBrand);
-        json_object_object_get_ex(jobj2,"generic_name_fr",&jobjName);
+        json_object_object_get_ex(jobj2,"product_name_fr",&jobjName);
         json_object_object_get_ex(jobj2,"image_url",&jobjImgUrl);
 
         strcpy(product->brand , json_object_get_string(jobjBrand));
