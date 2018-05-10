@@ -18,6 +18,11 @@
 #include <curl/curl.h>
 #include <json-c/json.h>
 #include <time.h>
+#include <pthread.h> 
+#include <unistd.h> 
+#include <semaphore.h> 
+
+#define CHECK_DIF(exp,err,msg) if ((exp) != (err)) { perror(msg); exit(-1); }
 
 #define CHECK(sts,msg) if ((sts) == -1) {perror(msg); exit(-1); }
 #define CHECKp(sts,msg) if ((sts) == NULL) {perror(msg); exit(-1); }
@@ -31,6 +36,9 @@
 #define PORT_SVC 5000
 
 #define MAX_CLTS 10
+
+sem_t mutex_pot;
+
 
 typedef char buffer_t[MAX_BUFFER];
 typedef char msg_t[MAX_MSG];
@@ -62,7 +70,7 @@ struct string {
   size_t len;
 };
 
-void traiter110(int sock,protofmt_t req, protofmt_t *rep);
+void traiterRequete(int sock,protofmt_t req, protofmt_t *rep);
 
 
 int tailleREQ2REP(void);
@@ -85,5 +93,6 @@ void dialogueAvecServ(int sockDialogue);
 void dialogueAvecClient(int sockDialogue);
 void addBackslash(buffer_t b);
 void traiterReponse( protofmt_t req);
+void * ecoutePotentiometre();
 
 #endif

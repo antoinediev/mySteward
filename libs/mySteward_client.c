@@ -72,6 +72,7 @@ int connectServer(char *hostAddr, char *portNum){
 void creerRequete(protofmt_t *req){
     msg_t barreCode;
     int pourcentage = POURCENTAGE;
+    //int pourcentage = read_potentiometre();
     scanf("%s",barreCode); 
     sprintf(req->msg,"%d&%s",pourcentage,barreCode);
     printf("%s\n",req->msg);
@@ -82,50 +83,36 @@ void creerRequete(protofmt_t *req){
 void traiterReponse( protofmt_t rep ){
     int pourcentage=0;
     buffer_t code;
-    char colorlcd[10], msglcd[500];
+    char colorlcd[10];
+    CHECK( sem_wait(&mutex_pot), "sem_wait error"); //on attend la mutex pour ecrire sur le LCD
+
     switch(rep.code){
         case 200: //ajout ok
-            ;
-            strcpy(msglcd, "PRODUIT AJOUTE: "); 
-            strcat(msglcd, rep.msg); //on affiche le nom retourné par le serveur
             strcpy(colorlcd, "green");
-         //   print_lcd(msglcd,colorlcd);
-            //delay(3000);
-            strcpy(colorlcd, "black");
-         //   print_lcd("",colorlcd);
+         //   print_lcd(rep.msg,colorlcd);
             break;
 
         case 201: //mise à la poubelle
-            ;
             strcpy(colorlcd, "green");
             //print_lcd(rep.msg,colorlcd);
-            //delay(3000);
-            strcpy(colorlcd, "black");
-         //   print_lcd("",colorlcd);
             break;
 
-        case 202: 
-            ;
-            strcpy(msglcd, "ALERTE ALLERGENE: "); 
-            strcat(msglcd, rep.msg);
+        case 202: //alerte allergenes
             strcpy(colorlcd, "green");
-         //   print_lcd(msglcd,colorlcd);
+         //   print_lcd(rep.msg,colorlcd);
             //buzz();
-            //delay(3000);
-            strcpy(colorlcd, "black");
-         //   print_lcd("",colorlcd);
             break;
 
         case 400: 
-            ;
-            strcpy(msglcd, "ERREUR SERVEUR"); 
             strcpy(colorlcd, "RED");
-         //   print_lcd(msglcd,colorlcd);
+         //   print_lcd(rep.msg,colorlcd);
             //buzz();
-            //delay(3000);
-            strcpy(colorlcd, "black");
-         //   print_lcd(msglcd,colorlcd);
             break;
+
+    sleep(3);
+    strcpy(colorlcd, "black");
+ //   print_lcd("",colorlcd);
+    CHECK( sem_post(&mutex_pot),  "sem_post error"); // on libère la mutex quand on a fini d'écrire
 
     }
 
@@ -141,12 +128,31 @@ void dialogueAvecServ(int sockDialogue){
         memset(&req,0,sizeof(protofmt_t));
         creerRequete(&req);
         ecrireRequete(sockDialogue,req);
-        // Code zero pour arreter le dialogue
-        if(req.code==0) break; ///////////////////////////////////// jms le cas
+        
         lireReponse(sockDialogue,&rep);
         traiterReponse(rep);
     }  
 }
 
 
+void * ecoutePotentiometre(){
+    printf("Ecoute du potentiomètre lancée\n");
+    int value=-1, oldvalue=-1;
+    char colorlcd[10]="", msglcd[10];
 
+    while(1){
+        //value = read_potentiometre();
+        if(value != oldvalue){ //si le potentiometre change de valeur on affiche la nouvelle valeur
+            oldvalue=value;
+
+            strcpy(colorlcd, "blue");
+            sprintf(msglcd, "Quantité selectionnée: %d", value);
+            CHECK( sem_wait(&mutex_pot), "sem_wait error");
+         //   print_lcd(msglcd,colorlcd);
+            CHECK( sem_post(&mutex_pot),  "sem_post error");
+
+            usleep(100000);//100ms between read
+
+        }
+    }
+}

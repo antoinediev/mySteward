@@ -1,7 +1,7 @@
 all : client serveur
 
 client : libs/mySteward_client.o client/client.c
-	gcc  libs/mySteward_client.o client/client.c -o client/client
+	gcc  libs/mySteward_client.o client/client.c -o client/client -pthread
 
 serveur : libs/mySteward_serveur.o serveur/serveur.c
 	gcc -L/usr/local/opt/openssl/lib -I/usr/local/mysql/include libs/mySteward_serveur.o serveur/serveur.c -o serveur/serveur `mysql_config --libs` `curl-config --libs` -ljson-c
