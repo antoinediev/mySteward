@@ -82,7 +82,7 @@ int createSocketEcoute(char *ipSvc, int portSvc);
 void creerRequete(protofmt_t *req);
 void dialogueAvecServ(int sockDialogue);
 void dialogueAvecClient(int sockDialogue);
+void addBackslash(buffer_t b);
 void traiterReponse( protofmt_t req);
-
 
 #endif
