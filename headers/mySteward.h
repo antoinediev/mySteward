@@ -17,6 +17,7 @@
 #include <math.h>
 #include <curl/curl.h>
 #include <json-c/json.h>
+#include <time.h>
 
 #define CHECK(sts,msg) if ((sts) == -1) {perror(msg); exit(-1); }
 #define CHECKp(sts,msg) if ((sts) == NULL) {perror(msg); exit(-1); }

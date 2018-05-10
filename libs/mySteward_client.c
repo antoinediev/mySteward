@@ -82,33 +82,49 @@ void creerRequete(protofmt_t *req){
 void traiterReponse( protofmt_t rep ){
     int pourcentage=0;
     buffer_t code;
+    char colorlcd[10], msglcd[500];
     switch(rep.code){
         case 200: //ajout ok
-            char msglcd[500] ="PRODUIT AJOUTE: "; 
+            ;
+            strcpy(msglcd, "PRODUIT AJOUTE: "); 
             strcat(msglcd, rep.msg); //on affiche le nom retourné par le serveur
-            char colorlcd[]="green";
+            strcpy(colorlcd, "green");
          //   print_lcd(msglcd,colorlcd);
-            delay(3000);
-            char colorlcd[]="black";
+            //delay(3000);
+            strcpy(colorlcd, "black");
          //   print_lcd("",colorlcd);
+            break;
 
-            break;
         case 201: //mise à la poubelle
-            char colorlcd[]="green";
-            print_lcd(rep.msg,colorlcd);
-            delay(3000);
-            char colorlcd[]="black";
+            ;
+            strcpy(colorlcd, "green");
+            //print_lcd(rep.msg,colorlcd);
+            //delay(3000);
+            strcpy(colorlcd, "black");
          //   print_lcd("",colorlcd);
             break;
+
         case 202: 
-            char msglcd[] ="ALERTE ALLERGENE: "; 
+            ;
+            strcpy(msglcd, "ALERTE ALLERGENE: "); 
             strcat(msglcd, rep.msg);
-            char colorlcd[]="green";
+            strcpy(colorlcd, "green");
          //   print_lcd(msglcd,colorlcd);
-            buzz();
-            delay(3000);
-            char colorlcd[]="black";
+            //buzz();
+            //delay(3000);
+            strcpy(colorlcd, "black");
          //   print_lcd("",colorlcd);
+            break;
+
+        case 400: 
+            ;
+            strcpy(msglcd, "ERREUR SERVEUR"); 
+            strcpy(colorlcd, "RED");
+         //   print_lcd(msglcd,colorlcd);
+            //buzz();
+            //delay(3000);
+            strcpy(colorlcd, "black");
+         //   print_lcd(msglcd,colorlcd);
             break;
 
     }
