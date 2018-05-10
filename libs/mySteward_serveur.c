@@ -19,7 +19,7 @@ void traiterRequete(int sock,protofmt_t req, protofmt_t *rep){
 
     char *server = "localhost";
     char *user = "root";
-    char *password = "raspberry"; 
+    char *password = ""; 
     char *database = "mySteward";
 
     rep->code = 400; // code d'erreur par defaut 
