@@ -15,11 +15,12 @@ then
 	if [ $reponse == "y" ]
 	then
 		sudo apt-get --assume-yes install libcurl4-openssl-dev libmariadbclient-dev libjson-c-dev mysql-server php-mysql
+		bash /script/script.sh
         make
         sudo mysql --user=root < database/installDB.sql
         mysql -u root < database/mySteward.sql 
 	else
-		sudo apt-get --assume-yes install libcurl4-openssl-dev libmariadbclient-dev libjson-c-dev mysql-server php-mysql
+		sudo apt-get --assume-yes install libcurl4-openssl-dev libmariadbclient-dev libjson-c-dev 
         make
 	fi
 fi
