@@ -71,9 +71,8 @@ int connectServer(char *hostAddr, char *portNum){
 /** user input **/
 void creerRequete(protofmt_t *req){
     msg_t barreCode;
-    int pourcentage = POURCENTAGE;
-    //int pourcentage = read_potentiometre();
     scanf("%s",barreCode); 
+    int pourcentage = getPot();
     sprintf(req->msg,"%d&%s",pourcentage,barreCode);
     printf("%s\n",req->msg);
     req->code = 110;
@@ -85,36 +84,34 @@ void traiterReponse( protofmt_t rep ){
     buffer_t code;
     char colorlcd[10];
     CHECK( sem_wait(&mutex_pot), "sem_wait error"); //on attend la mutex pour ecrire sur le LCD
-
+		//printf("traiterREp a sem");
     switch(rep.code){
         case 200: //ajout ok
             strcpy(colorlcd, "green");
-         //   print_lcd(rep.msg,colorlcd);
+            print_lcd(rep.msg,colorlcd);
             break;
 
         case 201: //mise à la poubelle
             strcpy(colorlcd, "green");
-            //print_lcd(rep.msg,colorlcd);
+            print_lcd(rep.msg,colorlcd);
             break;
 
         case 202: //alerte allergenes
-            strcpy(colorlcd, "green");
-         //   print_lcd(rep.msg,colorlcd);
-            //buzz();
+            strcpy(colorlcd, "red");
+            print_lcd(rep.msg,colorlcd);
+            buzz();
             break;
 
         case 400: 
             strcpy(colorlcd, "RED");
-         //   print_lcd(rep.msg,colorlcd);
-            //buzz();
+            print_lcd(rep.msg,colorlcd);
+            buzz();
             break;
-
-    sleep(3);
-    strcpy(colorlcd, "black");
- //   print_lcd("",colorlcd);
-    CHECK( sem_post(&mutex_pot),  "sem_post error"); // on libère la mutex quand on a fini d'écrire
-
-    }
+		}
+   CHECK( sem_post(&mutex_pot),  "sem_post error"); // on libère la mutex quand on a fini d'écrire
+   //printf("traiterREp a plus sem");
+	usleep(100000);
+    
 
 }
 /** Dialogue **/
@@ -137,31 +134,102 @@ void dialogueAvecServ(int sockDialogue){
 
 void * ecoutePotentiometre(){
     printf("Ecoute du potentiomètre lancée\n");
-    int value=-1, oldvalue=-1;
-    char colorlcd[10]="", msglcd[10]="", buffer[200]="";
+    int value=-1, oldvalue=-1, buff=-1;
+    char colorlcd[10]="", msglcd[100]="";
 
     while(1){
-        FILE* file = popen("../modules_grovepi/modules.out getPot", "r");
-        if (file == NULL)  printf("error popen");
-        else{
-            fgets(buffer, 200, file);
-            if(strstr(buffer, "error") == NULL){
-                value = atoi(buffer);
-            }
-            else printf("%s\n", buffer );
-        }
-        //value = read_potentiometre();
+
+        value = getPot();
+   /*    
+        if(0<=buff && buff<7) value=0;
+       else if(7<=buff && buff<17) value=10;
+       else if(17<=buff && buff<26) value=20;
+       else if(26<=buff && buff<36) value=30;
+       else if(36<=buff && buff<46) value=40;
+       else if(46<=buff && buff<56) value=50;
+       else if(56<=buff && buff<66) value=60;
+       else if(66<=buff && buff<76) value=70;
+       else if(76<=buff && buff<86) value=80;
+       else if(86<=buff && buff<94) value=90;
+       else if(94<=buff && buff<=100) value=100;
+        */
         if(value != oldvalue){ //si le potentiometre change de valeur on affiche la nouvelle valeur
             oldvalue=value;
 
-            strcpy(colorlcd, "blue");
-            sprintf(msglcd, "Quantité selectionnée: %d", value);
+            sprintf(msglcd, "Quantite_selectionnee:_%d", value);
+          //  printf("ecoute attend sem\n");
             CHECK( sem_wait(&mutex_pot), "sem_wait error");
-         //   print_lcd(msglcd,colorlcd);
-            CHECK( sem_post(&mutex_pot),  "sem_post error");
-
+         //  printf("ecoute a sem\n");
+            print_lcd(msglcd,"blue");
+            CHECK( sem_post(&mutex_pot),  "sem_post error"); 
+ 			//printf("ecoute a plus sem\n");
             usleep(100000);//100ms between read
 
         }
     }
 }
+
+int getPot(){
+			int buff=-1;
+			char  buffer[200]="";
+	     FILE* file = popen("./modules_grovepi/modules.out getPot", "r");
+        if (file == NULL)  printf("error popen\n");
+        else{
+            fgets(buffer, 200, file);
+            if(strstr(buffer, "error") == NULL){
+            	if(pclose(file) != 0)
+           				printf("error closing popen stream\n");     
+           			buff= atoi(buffer);
+
+       			 if(0<=buff && buff<7) return 0;
+     			  else if(7<=buff && buff<17) return 10;
+    				  else if(17<=buff && buff<26) return 20;
+      			else if(26<=buff && buff<36) return 30;
+     			  	else if(36<=buff && buff<46) return 40;
+      			 else if(46<=buff && buff<56) return 50;
+      			 else if(56<=buff && buff<66) return 60;
+      			 else if(66<=buff && buff<76) return 70;
+      			 else if(76<=buff && buff<86) return 80;
+      			 else if(86<=buff && buff<94) return 90;
+       			else if(94<=buff && buff<=100) return 100;
+            }
+            else 	printf("%s\n", buffer );
+
+           if(pclose(file ) != 0)
+           		printf("error closing popen stream\n");
+           		return -1;
+        } 
+}
+
+void buzz(){
+				char  buffer[200]="";
+	     FILE* file = popen("./modules_grovepi/modules.out buzz", "r");
+        if (file == NULL)  printf("error popen");
+        else{
+            fgets(buffer, 200, file);
+            if(strstr(buffer, "error") != NULL)
+            	printf("%s\n", buffer );
+            
+            if(pclose(file) != 0)
+           		printf("error closing popen stream\n");
+            return ;
+        }
+	}
+	
+	void print_lcd(char* msg, char* color){
+				char  buffer[200]="" , cmd[500]="./modules_grovepi/modules.out print_lcd ";
+				strcat(cmd, msg);
+				strcat(cmd," ");
+				strcat(cmd,color);
+	     FILE* file = popen(cmd, "r");
+        if (file == NULL)  printf("error popen");
+        else{
+            fgets(buffer, 200, file);
+            if(strstr(buffer, "error") != NULL) //le grovepi a envoyé une erreur
+            	printf("%s\n", buffer );
+            	
+             if(pclose(file) != 0)
+           		printf("error closing popen stream\n");
+            return ;
+        }
+	}

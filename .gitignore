@@ -2,3 +2,5 @@
 client/client
 serveur/serveur
 .vscode
+*~
+*.out

@@ -56,7 +56,8 @@ int main(int argc, char ** argv){
 	}
 	catch(I2CError &error)
 	{
-		printf(error.detail());
+	 //printf(error.detail());
+		printf("error i2c");
 
 		return -1;
 	}
@@ -69,7 +70,7 @@ else if(strcmp(argv[1], "buzz")==0 ){
 	buzz();
 }
 else if(strcmp(argv[1], "getPot")==0 ){
-	return read_potentiometre();
+	printf("%d", read_potentiometre() );
 }
 	/*
 	printf("[degrees = %d\n", read_potentiometre() );
@@ -89,7 +90,10 @@ int print_lcd(char * msg, char* color)
 	{
 		// connect to the i2c-line
 		lcd.connect();
-
+		for(int i =0; msg[i] != '\0'; i++ )
+		{
+			if ( msg[i]=='_') msg[i]=' ';
+		}
 		// set text and RGB color on the LCD
 		lcd.setText(msg );
 		if( strcmp(color, "red")==0 || strcmp(color, "RED")==0)
@@ -105,7 +109,7 @@ int print_lcd(char * msg, char* color)
 	catch(I2CError &error)
 	{
 		printf(error.detail());
-
+		printf("error i2c");
 		return -1;
 	}
 
@@ -135,7 +139,8 @@ int read_potentiometre()
 	catch
 	(I2CError &error)
 	{
-		printf(error.detail());
+	  printf(error.detail());
+		printf("error i2c");
 
 		return -1;
 	}
@@ -154,31 +159,31 @@ int buzz()
 			// turn ON the buzzer for 1000 ms (1 sec)
 			// and put the state on the screen
 			digitalWrite(buzzer_pin, HIGH);
-			printf("[pin %d][buzzer ON]\n", buzzer_pin);
+			//printf("[pin %d][buzzer ON]\n", buzzer_pin);
 			delay(1000);
 
 			// and then OFF for another 1000 ms (1 sec)
 			// and put the state on the screen
 			digitalWrite(buzzer_pin, LOW);
-			printf("[pin %d][buzzer OFF]\n", buzzer_pin);
+			//printf("[pin %d][buzzer OFF]\n", buzzer_pin);
 			delay(1000);
 			
 				// turn ON the buzzer for 1000 ms (1 sec)
 			// and put the state on the screen
 			digitalWrite(buzzer_pin, HIGH);
-			printf("[pin %d][buzzer ON]\n", buzzer_pin);
+			//printf("[pin %d][buzzer ON]\n", buzzer_pin);
 			delay(1000);
 
 			// and then OFF for another 1000 ms (1 sec)
 			// and put the state on the screen
 			digitalWrite(buzzer_pin, LOW);
-			printf("[pin %d][buzzer OFF]\n", buzzer_pin);
+			//printf("[pin %d][buzzer OFF]\n", buzzer_pin);
 			
 	}
 	catch(I2CError &error)
 	{
 		printf(error.detail());
-
+		printf("error i2c");
 		return -1;
 	}
 

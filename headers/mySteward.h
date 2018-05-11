@@ -94,5 +94,9 @@ void dialogueAvecClient(int sockDialogue);
 void addBackslash(buffer_t b);
 void traiterReponse( protofmt_t req);
 void * ecoutePotentiometre();
+int getPot();
+void buzz();
+void print_lcd(char* msg, char* color);
+
 
 #endif

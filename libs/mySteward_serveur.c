@@ -23,7 +23,7 @@ void traiterRequete(int sock,protofmt_t req, protofmt_t *rep){
     char *database = "mySteward";
 
     rep->code = 400; // code d'erreur par defaut 
-    strcpy(rep->msg,"erreur inconnue");
+    strcpy(rep->msg,"erreur_inconnue");
 
     sscanf(req.msg,"%d&%s",&pourcentage,barrecode);
     memset(query,0,MAX_BUFFER);
@@ -61,7 +61,7 @@ void traiterRequete(int sock,protofmt_t req, protofmt_t *rep){
             }
             else{ 
                 rep->code = 200;
-                strcpy(rep->msg,"PRODUIT AJOUTE");
+                strcpy(rep->msg,"PRODUIT_AJOUTE");
             }
            
         } else if(pourcentage <100 && pourcentage>0){ //Pourcentage different de 100
@@ -72,7 +72,7 @@ void traiterRequete(int sock,protofmt_t req, protofmt_t *rep){
             if (mysql_query(conn, query)) {
                 fprintf(stderr, "[Error]%s\n", mysql_error(conn));
                 rep->code = 400;
-                strcpy(rep->msg,"erreur connexion mySQL");
+                strcpy(rep->msg,"erreur_connexion_mySQL");
             }
             res = mysql_store_result(conn);
             num_fields = mysql_num_fields(res);
@@ -86,11 +86,11 @@ void traiterRequete(int sock,protofmt_t req, protofmt_t *rep){
                 if (mysql_query(conn, query)) {
                     fprintf(stderr, "[Error]%s\n", mysql_error(conn));
                     rep->code = 400;
-                    strcpy(rep->msg,"erreur connexion mySQL");
+                    strcpy(rep->msg,"erreur_connexion_mySQL");
                 }
                 else{
                     rep->code = 200;
-                    strcpy(rep->msg,"PRODUIT AJOUTE");                    
+                    strcpy(rep->msg,"PRODUIT_MODIFIE");                    
                 }
             } else {//quantité en base est un decimal 
                 memset(query,0,MAX_BUFFER);
@@ -98,11 +98,11 @@ void traiterRequete(int sock,protofmt_t req, protofmt_t *rep){
                 if (mysql_query(conn, query)) {
                     fprintf(stderr, "[Error]%s\n", mysql_error(conn));
                     rep->code = 400;
-                    strcpy(rep->msg,"erreur connexion mySQL");
+                    strcpy(rep->msg,"erreur_connexion_mySQL");
                 }
                 else{
                     rep->code = 200;
-                    strcpy(rep->msg,"PRODUIT AJOUTE");                    
+                    strcpy(rep->msg,"PRODUIT_MODIFIE");                    
                 }
             }
         } else { //Pourcentage = 0
@@ -112,7 +112,7 @@ void traiterRequete(int sock,protofmt_t req, protofmt_t *rep){
             if (mysql_query(conn, query)) {
                 fprintf(stderr, "[Error]%s\n", mysql_error(conn));
                 rep->code = 400;
-                strcpy(rep->msg,"erreur connexion mySQL");
+                strcpy(rep->msg,"erreur_connexion_mySQL");
             }
             res = mysql_store_result(conn);
             num_fields = mysql_num_fields(res);
@@ -126,11 +126,11 @@ void traiterRequete(int sock,protofmt_t req, protofmt_t *rep){
                 if (mysql_query(conn, query)) {
                     fprintf(stderr, "[Error]%s\n", mysql_error(conn));
                     rep->code = 400;
-                    strcpy(rep->msg,"erreur connexion mySQL");
+                    strcpy(rep->msg,"erreur_connexion_mySQL");
                 }
                 else{
-                    rep->code = 200;
-                    strcpy(rep->msg,"PRODUIT SUPPRIME");                    
+                    rep->code = 201;
+                    strcpy(rep->msg,"PRODUIT_SUPPRIME");                    
                 }
             } else {//quantité en base est un decimal 
                 memset(query,0,MAX_BUFFER);
@@ -138,11 +138,11 @@ void traiterRequete(int sock,protofmt_t req, protofmt_t *rep){
                 if (mysql_query(conn, query)) {
                     fprintf(stderr, "[Error]%s\n", mysql_error(conn));
                     rep->code = 400;
-                    strcpy(rep->msg,"erreur connexion mySQL");
+                    strcpy(rep->msg,"erreur_connexion_mySQL");
                 }
                 else{
                     rep->code = 200;
-                    strcpy(rep->msg,"PRODUIT SUPPRIME");                    
+                    strcpy(rep->msg,"PRODUIT_SUPPRIME");                    
                 }
             }
         }
@@ -159,18 +159,18 @@ void traiterRequete(int sock,protofmt_t req, protofmt_t *rep){
         if (mysql_query(conn, query)) {
             fprintf(stderr, "[Error]%s\n", mysql_error(conn));
             rep->code = 400;
-            strcpy(rep->msg,"erreur connexion mySQL");
+            strcpy(rep->msg,"erreur_connexion_mySQL");
         }
         memset(query,0,MAX_BUFFER);
         sprintf(query,"insert into STOCKS (`quantity`,`idProduct`) values ('%lf',(select idPRODUCT from PRODUCTS where barrecode = %s));",(double)pourcentage/100,barrecode);
         if (mysql_query(conn, query)) {
             fprintf(stderr, "[Error]%s\n", mysql_error(conn));
             rep->code = 400;
-            strcpy(rep->msg,"erreur connexion mySQL");
+            strcpy(rep->msg,"erreur_connexion_mySQL");
         }  
         else{
             rep->code = 200;
-            strcpy(rep->msg,"PRODUIT AJOUTE");                    
+            strcpy(rep->msg,"PRODUIT_AJOUTE");                    
         }        
     }
     
