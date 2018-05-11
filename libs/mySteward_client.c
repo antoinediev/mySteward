@@ -138,9 +138,18 @@ void dialogueAvecServ(int sockDialogue){
 void * ecoutePotentiometre(){
     printf("Ecoute du potentiomètre lancée\n");
     int value=-1, oldvalue=-1;
-    char colorlcd[10]="", msglcd[10];
+    char colorlcd[10]="", msglcd[10]="", buffer[200]="";
 
     while(1){
+        FILE* file = popen("../modules_grovepi/modules.out getPot", "r");
+        if (file == NULL)  printf("error popen");
+        else{
+            fgets(buffer, 200, file);
+            if(strstr(buffer, "error") == NULL){
+                value = atoi(buffer);
+            }
+            else printf("%s\n", buffer );
+        }
         //value = read_potentiometre();
         if(value != oldvalue){ //si le potentiometre change de valeur on affiche la nouvelle valeur
             oldvalue=value;
