@@ -19,7 +19,7 @@ void traiterRequete(int sock,protofmt_t req, protofmt_t *rep){
 
     char *server = "localhost";
     char *user = "root";
-    char *password = ""; 
+    char *password = "raspberry"; 
     char *database = "mySteward";
 
     rep->code = 400; // code d'erreur par defaut 
@@ -152,8 +152,10 @@ void traiterRequete(int sock,protofmt_t req, protofmt_t *rep){
         strcpy(product.barrecode,barrecode);
         requestApiFood(&product);
         memset(query,0,MAX_BUFFER);
+	addBackslash(product.name);
+	addBackslash(product.brand);
         sprintf(query,"insert into PRODUCTS (`barrecode`,`name`,`imgUrl`,`brand`) values ('%s','%s','%s','%s');",product.barrecode,product.name,product.imgUrl,product.brand);
-        addBackslash(query);
+        
         if (mysql_query(conn, query)) {
             fprintf(stderr, "[Error]%s\n", mysql_error(conn));
             rep->code = 400;
