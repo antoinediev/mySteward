@@ -129,8 +129,25 @@ void traiterRequete(int sock,protofmt_t req, protofmt_t *rep){
                     strcpy(rep->msg,"erreur_connexion_mySQL");
                 }
                 else{
-                    rep->code = 201;
-                    strcpy(rep->msg,"PRODUIT_SUPPRIME");                    
+                    memset(query,0,MAX_BUFFER);
+                    sprintf(query,"SELECT quantity FROM STOCKS WHERE idProduct = %s ", rowProduct[0]);
+                    if (mysql_query(conn, query)) {
+                        fprintf(stderr, "[Error]%s\n", mysql_error(conn));
+                        rep->code = 400;
+                        strcpy(rep->msg,"erreur_connexion_mySQL");
+                    } 
+                    res = mysql_store_result(conn);
+                    num_fields = mysql_num_fields(res);
+                    while((row = mysql_fetch_row(res)) != NULL){
+                        sscanf(row[0],"%lf",&actualQuantity);
+                    }
+                    if(actualQuantity==0.0){
+                        rep->code = 203;
+                        strcpy(rep->msg,"STOCK_A_0");
+                    } else {
+                        rep->code = 201;
+                        strcpy(rep->msg,"PRODUIT_SUPPRIME"); 
+                    }                     
                 }
             } else {//quantité en base est un decimal 
                 memset(query,0,MAX_BUFFER);
@@ -141,8 +158,25 @@ void traiterRequete(int sock,protofmt_t req, protofmt_t *rep){
                     strcpy(rep->msg,"erreur_connexion_mySQL");
                 }
                 else{
-                    rep->code = 200;
-                    strcpy(rep->msg,"PRODUIT_SUPPRIME");                    
+                    memset(query,0,MAX_BUFFER);
+                    sprintf(query,"SELECT quantity FROM STOCKS WHERE idProduct = %s ", rowProduct[0]);
+                    if (mysql_query(conn, query)) {
+                        fprintf(stderr, "[Error]%s\n", mysql_error(conn));
+                        rep->code = 400;
+                        strcpy(rep->msg,"erreur_connexion_mySQL");
+                    } 
+                    res = mysql_store_result(conn);
+                    num_fields = mysql_num_fields(res);
+                    while((row = mysql_fetch_row(res)) != NULL){
+                        sscanf(row[0],"%lf",&actualQuantity);
+                    }
+                    if(actualQuantity==0.0){
+                        rep->code = 203;
+                        strcpy(rep->msg,"STOCK_A_0");
+                    } else {
+                        rep->code = 201;
+                        strcpy(rep->msg,"PRODUIT_SUPPRIME"); 
+                    }                  
                 }
             }
         }
@@ -152,8 +186,8 @@ void traiterRequete(int sock,protofmt_t req, protofmt_t *rep){
         strcpy(product.barrecode,barrecode);
         requestApiFood(&product);
         memset(query,0,MAX_BUFFER);
-	addBackslash(product.name);
-	addBackslash(product.brand);
+	    addBackslash(product.name);
+	    addBackslash(product.brand);
         sprintf(query,"insert into PRODUCTS (`barrecode`,`name`,`imgUrl`,`brand`) values ('%s','%s','%s','%s');",product.barrecode,product.name,product.imgUrl,product.brand);
         
         if (mysql_query(conn, query)) {

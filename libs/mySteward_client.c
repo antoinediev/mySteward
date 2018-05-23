@@ -102,6 +102,12 @@ void traiterReponse( protofmt_t rep ){
             buzz();
             break;
 
+        case 203: //mise à la poubelle avec stock à zero
+            buzz();
+            strcpy(colorlcd, "green");
+            print_lcd(rep.msg,colorlcd);
+            break;
+
         case 400: 
             strcpy(colorlcd, "RED");
             print_lcd(rep.msg,colorlcd);
